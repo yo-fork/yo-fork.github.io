@@ -2,63 +2,54 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
+    <!-- スマホでピンチイン・アウトを許可するよう修正済み -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Playground</title>
     <link rel="manifest" href="manifest.json">
+    
+    <!-- CSS / ライブラリの読み込み -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
+    <!-- ハイライト用 (Highlight.js) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    
+    <!-- Mermaid用 (ES Modulesとして読み込む) -->
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: false, theme: 'default' });
+        window.mermaid = mermaid; // グローバルから呼び出せるようにする
+    </script>
+
     <style>
+        /* エディタとプレビューの基本設定 */
         body { -webkit-touch-callout: none; -webkit-user-select: none; }
-        textarea { font-family: monospace; }
+        textarea { font-family: monospace; tab-size: 4; }
+        /* Markdownプレビュー内の見た目調整 */
+        .prose pre { padding: 0; background: transparent; }
+        .prose .hljs { border-radius: 0.5rem; padding: 1rem; }
+        .mermaid { display: flex; justify-content: center; }
     </style>
 </head>
 <body class="bg-gray-100 h-screen flex flex-col">
+    <!-- タブ切り替え -->
     <div class="flex bg-slate-800 text-white">
-        <button onclick="showTab('html')" class="px-4 py-2 hover:bg-slate-700 focus:bg-slate-600 flex-1">HTML Run</button>
-        <button onclick="showTab('md')" class="px-4 py-2 hover:bg-slate-700 focus:bg-slate-600 flex-1">Markdown</button>
+        <button onclick="showTab('html')" class="px-4 py-3 hover:bg-slate-700 focus:bg-slate-600 flex-1">HTML Run</button>
+        <button onclick="showTab('md')" class="px-4 py-3 hover:bg-slate-700 focus:bg-slate-600 flex-1">Markdown</button>
     </div>
 
+    <!-- HTML Editor/Preview -->
     <div id="tab-html" class="flex-1 flex flex-col p-2 gap-2">
         <textarea id="html-code" class="flex-1 p-2 border rounded shadow-inner" placeholder="Enter HTML/JS here..."><h1 class="text-2xl font-bold text-blue-500">Hello!</h1>
 <script>console.log('Running!');</script></textarea>
-        <button onclick="runCode()" class="bg-blue-600 text-white py-2 rounded shadow">Run Code</button>
+        <button onclick="runCode()" class="bg-blue-600 text-white py-2 rounded shadow font-bold">Run Code</button>
         <iframe id="output-frame" class="flex-1 bg-white border rounded"></iframe>
     </div>
 
+    <!-- Markdown Editor/Preview -->
     <div id="tab-md" class="hidden flex-1 flex flex-col p-2 gap-2">
-        <textarea id="md-input" class="flex-1 p-2 border rounded shadow-inner" placeholder="Enter Markdown here..." oninput="renderMd()"># Title
-- List item 1
-- List item 2</textarea>
-        <div id="md-output" class="flex-1 bg-white border rounded p-4 overflow-auto prose lg:prose-xl"></div>
-    </div>
-
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js');
-        }
-
-        function showTab(type) {
-            document.getElementById('tab-html').classList.toggle('hidden', type !== 'html');
-            document.getElementById('tab-md').classList.toggle('hidden', type !== 'md');
-            if (type === 'md') renderMd();
-        }
-
-        function runCode() {
-            const code = document.getElementById('html-code').value;
-            const frame = document.getElementById('output-frame');
-            const doc = frame.contentDocument || frame.contentWindow.document;
-            doc.open();
-            doc.write(`<script src="https://cdn.tailwindcss.com"><\/script>${code}`);
-            doc.close();
-        }
-
-        function renderMd() {
-            const input = document.getElementById('md-input').value;
-            document.getElementById('md-output').innerHTML = marked.parse(input);
-        }
-
-        // 初期実行
-        runCode();
-    </script>
-</body>
-</html>
+        <textarea id="md-input" class="flex-1 p-2 border rounded shadow-inner" placeholder="Enter Markdown here..." oninput="renderMd()"># コードブロックのテスト
+```javascript
+const message = "Hello World";
+console.log(message);
