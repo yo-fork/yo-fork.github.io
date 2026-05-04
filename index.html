@@ -15,6 +15,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
   <script type="module" src="./app.js"></script>
+  <script defer src="./patch.js"></script>
 </head>
 <body class="bg-slate-100 app-height flex flex-col">
   <div class="flex bg-slate-800 text-white shrink-0 pt-[env(safe-area-inset-top)]">
@@ -117,13 +118,16 @@
         <button id="md-font-smaller" type="button" class="tool-button">A-</button>
         <button id="md-font-larger" type="button" class="tool-button">A+</button>
       </div>
-      <div class="md-toolbar mt-1">
-        <button id="md-preview-zoom-out" type="button" class="tool-button">Preview −</button>
-        <button id="md-preview-zoom-reset" type="button" class="tool-button">Preview 100%</button>
-        <button id="md-preview-zoom-in" type="button" class="tool-button">Preview ＋</button>
+      <div id="md-zoom-source" class="md-toolbar mt-1">
+        <button id="md-preview-zoom-out" type="button" class="tool-button">−</button>
+        <button id="md-preview-zoom-reset" type="button" class="tool-button">100%</button>
+        <button id="md-preview-zoom-in" type="button" class="tool-button">＋</button>
         <div id="md-preview-zoom-label" class="rounded border bg-white px-2 py-2 text-center text-xs font-bold text-slate-700">100%</div>
       </div>
     </details>
+
+    <div id="md-preview-zoom-bar" class="hidden md-toolbar shrink-0">
+    </div>
 
     <div id="md-stats" class="shrink-0 rounded bg-white border border-slate-200 px-2 py-1 text-xs text-slate-600"></div>
     <div id="md-status" class="hidden status shrink-0"></div>
