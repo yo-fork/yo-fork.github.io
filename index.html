@@ -1,56 +1,247 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Playground</title>
-    <link rel="manifest" href="manifest.json">
-    
-    <!-- CSS / ライブラリの読み込み -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- 勝手に仕様が変わって壊れないように、marked.jsのバージョンを v12.0.1 に固定 -->
-    <script src="https://cdn.jsdelivr.net/npm/marked@12.0.1/marked.min.js"></script>
-    
-    <!-- ハイライト用 (Highlight.js) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    
-    <!-- Mermaid用 -->
-    <script type="module">
-        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
-        mermaid.initialize({ startOnLoad: false, theme: 'default' });
-        window.mermaid = mermaid;
-        // Mermaidの準備ができたらMarkdownを描画する
-        renderMd();
-    </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
-    <style>
-        body { -webkit-touch-callout: none; -webkit-user-select: none; }
-        textarea { font-family: monospace; tab-size: 4; }
-        .prose pre { padding: 0; background: transparent; }
-        .prose .hljs { border-radius: 0.5rem; padding: 1rem; }
-        .mermaid { display: flex; justify-content: center; }
-    </style>
+  <title>My Playground</title>
+
+  <!-- iPhone ホーム画面登録向け -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Playground" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+
+  <link rel="manifest" href="./manifest.webmanifest" />
+
+  <!-- CSS / ライブラリ -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css"
+  />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+  <!-- Mermaid -->
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: "default",
+      securityLevel: "strict"
+    });
+
+    window.mermaid = mermaid;
+    window.dispatchEvent(new Event("mermaid-ready"));
+  </script>
+
+  <style>
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+    }
+
+    body {
+      overflow: hidden;
+      overscroll-behavior: none;
+    }
+
+    textarea {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      tab-size: 2;
+      -webkit-user-select: text;
+      user-select: text;
+      resize: none;
+      line-height: 1.5;
+    }
+
+    button {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .app-height {
+      height: 100dvh;
+    }
+
+    .markdown-body {
+      line-height: 1.7;
+    }
+
+    .markdown-body h1 {
+      font-size: 1.7rem;
+      font-weight: 700;
+      margin: 1rem 0 0.5rem;
+      border-bottom: 1px solid #e5e7eb;
+      padding-bottom: 0.3rem;
+    }
+
+    .markdown-body h2 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      margin: 1rem 0 0.5rem;
+      border-bottom: 1px solid #e5e7eb;
+      padding-bottom: 0.2rem;
+    }
+
+    .markdown-body h3 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin: 0.8rem 0 0.4rem;
+    }
+
+    .markdown-body p {
+      margin: 0.7rem 0;
+    }
+
+    .markdown-body ul,
+    .markdown-body ol {
+      margin: 0.7rem 0;
+      padding-left: 1.5rem;
+    }
+
+    .markdown-body ul {
+      list-style: disc;
+    }
+
+    .markdown-body ol {
+      list-style: decimal;
+    }
+
+    .markdown-body blockquote {
+      border-left: 4px solid #cbd5e1;
+      padding-left: 1rem;
+      color: #475569;
+      margin: 1rem 0;
+    }
+
+    .markdown-body code {
+      background: #f1f5f9;
+      padding: 0.15rem 0.35rem;
+      border-radius: 0.35rem;
+      font-size: 0.9em;
+    }
+
+    .markdown-body pre {
+      margin: 1rem 0;
+      overflow-x: auto;
+      border-radius: 0.75rem;
+      background: #f8fafc;
+    }
+
+    .markdown-body pre code {
+      display: block;
+      padding: 1rem;
+      background: transparent;
+      border-radius: 0;
+    }
+
+    .markdown-body table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 1rem 0;
+      overflow-x: auto;
+      display: block;
+    }
+
+    .markdown-body th,
+    .markdown-body td {
+      border: 1px solid #cbd5e1;
+      padding: 0.4rem 0.6rem;
+    }
+
+    .markdown-body th {
+      background: #f1f5f9;
+    }
+
+    .mermaid {
+      display: flex;
+      justify-content: center;
+      overflow-x: auto;
+      margin: 1rem 0;
+      padding: 1rem;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 0.75rem;
+    }
+  </style>
 </head>
-<body class="bg-gray-100 h-screen flex flex-col">
-    <!-- タブ切り替え -->
-    <div class="flex bg-slate-800 text-white">
-        <button onclick="showTab('html')" class="px-4 py-3 hover:bg-slate-700 focus:bg-slate-600 flex-1">HTML Run</button>
-        <button onclick="showTab('md')" class="px-4 py-3 hover:bg-slate-700 focus:bg-slate-600 flex-1">Markdown</button>
-    </div>
 
-    <!-- HTML Editor/Preview -->
-    <div id="tab-html" class="flex-1 flex flex-col p-2 gap-2">
-        <textarea id="html-code" class="flex-1 p-2 border rounded shadow-inner" placeholder="Enter HTML/JS here..."><h1 class="text-2xl font-bold text-blue-500">Hello!</h1>
-<script>console.log('Running!');</script></textarea>
-        <button onclick="runCode()" class="bg-blue-600 text-white py-2 rounded shadow font-bold">Run Code</button>
-        <iframe id="output-frame" class="flex-1 bg-white border rounded"></iframe>
-    </div>
+<body class="bg-slate-100 app-height flex flex-col">
+  <!-- タブ -->
+  <div class="flex bg-slate-800 text-white shrink-0">
+    <button
+      id="btn-html"
+      type="button"
+      class="px-4 py-3 flex-1 font-bold bg-slate-600"
+    >
+      HTML Run
+    </button>
 
-    <!-- Markdown Editor/Preview -->
-    <div id="tab-md" class="hidden flex-1 flex flex-col p-2 gap-2">
-        <textarea id="md-input" class="flex-1 p-2 border rounded shadow-inner" placeholder="Enter Markdown here..." oninput="renderMd()"># コードブロックのテスト
+    <button
+      id="btn-md"
+      type="button"
+      class="px-4 py-3 flex-1 font-bold hover:bg-slate-700"
+    >
+      Markdown
+    </button>
+  </div>
+
+  <!-- HTML Editor / Preview -->
+  <section id="tab-html" class="flex-1 min-h-0 flex flex-col p-2 gap-2">
+    <textarea
+      id="html-code"
+      class="flex-1 min-h-0 p-3 border rounded shadow-inner bg-white text-sm"
+      spellcheck="false"
+      autocapitalize="off"
+      autocomplete="off"
+      autocorrect="off"
+      placeholder="Enter HTML / CSS / JS here..."
+    ><h1 class="text-2xl font-bold text-blue-500">Hello!</h1>
+
+<p>iframe内でもTailwindが使えます。</p>
+
+<button class="bg-blue-600 text-white px-4 py-2 rounded" onclick="alert('Clicked!')">
+  Click me
+</button>
+
+<script>
+  console.log("Running!");
+</script></textarea>
+
+    <button
+      id="run-code"
+      type="button"
+      class="bg-blue-600 text-white py-2 rounded shadow font-bold active:bg-blue-700"
+    >
+      Run Code
+    </button>
+
+    <iframe
+      id="output-frame"
+      title="HTML output"
+      class="flex-1 min-h-0 bg-white border rounded"
+      sandbox="allow-scripts allow-forms allow-modals allow-popups"
+    ></iframe>
+  </section>
+
+  <!-- Markdown Editor / Preview -->
+  <section id="tab-md" class="hidden flex-1 min-h-0 flex flex-col p-2 gap-2">
+    <textarea
+      id="md-input"
+      class="flex-1 min-h-0 p-3 border rounded shadow-inner bg-white text-sm"
+      spellcheck="false"
+      autocapitalize="off"
+      autocomplete="off"
+      autocorrect="off"
+      placeholder="Enter Markdown here..."
+    ># Markdown Preview
+
+## コードブロック
+
 ```javascript
 const message = "Hello World";
 console.log(message);
