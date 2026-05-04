@@ -1,7 +1,7 @@
 {
   "name": "My Playground",
   "short_name": "Playground",
-  "start_url": "./playground_zoom.html",
+  "start_url": "./playground_fixed.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#f1f5f9",
