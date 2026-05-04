@@ -6,16 +6,14 @@
 
   <title>My Playground</title>
 
-  <!-- iPhone ホーム画面登録向け -->
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="Playground" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="theme-color" content="#0f172a" />
 
   <link rel="manifest" href="./manifest.webmanifest" />
 
-  <!-- CSS / ライブラリ -->
   <script src="https://cdn.tailwindcss.com"></script>
-
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
   <link
@@ -24,7 +22,6 @@
   />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 
-  <!-- Mermaid -->
   <script type="module">
     import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
 
@@ -48,6 +45,7 @@
     body {
       overflow: hidden;
       overscroll-behavior: none;
+      -webkit-text-size-adjust: 100%;
     }
 
     textarea {
@@ -57,18 +55,30 @@
       user-select: text;
       resize: none;
       line-height: 1.5;
+      font-size: 16px;
     }
 
     button {
       -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    iframe {
+      width: 100%;
     }
 
     .app-height {
+      height: 100vh;
       height: 100dvh;
+    }
+
+    .hidden {
+      display: none !important;
     }
 
     .markdown-body {
       line-height: 1.7;
+      overflow-wrap: anywhere;
     }
 
     .markdown-body h1 {
@@ -143,8 +153,9 @@
       border-collapse: collapse;
       width: 100%;
       margin: 1rem 0;
-      overflow-x: auto;
       display: block;
+      overflow-x: auto;
+      white-space: nowrap;
     }
 
     .markdown-body th,
@@ -171,8 +182,7 @@
 </head>
 
 <body class="bg-slate-100 app-height flex flex-col">
-  <!-- タブ -->
-  <div class="flex bg-slate-800 text-white shrink-0">
+  <div class="flex bg-slate-800 text-white shrink-0 pt-[env(safe-area-inset-top)]">
     <button
       id="btn-html"
       type="button"
@@ -190,7 +200,6 @@
     </button>
   </div>
 
-  <!-- HTML Editor / Preview -->
   <section id="tab-html" class="flex-1 min-h-0 flex flex-col p-2 gap-2">
     <textarea
       id="html-code"
@@ -215,7 +224,7 @@
     <button
       id="run-code"
       type="button"
-      class="bg-blue-600 text-white py-2 rounded shadow font-bold active:bg-blue-700"
+      class="bg-blue-600 text-white py-2 rounded shadow font-bold active:bg-blue-700 shrink-0"
     >
       Run Code
     </button>
@@ -228,7 +237,6 @@
     ></iframe>
   </section>
 
-  <!-- Markdown Editor / Preview -->
   <section id="tab-md" class="hidden flex-1 min-h-0 flex flex-col p-2 gap-2">
     <textarea
       id="md-input"
@@ -245,3 +253,191 @@
 ```javascript
 const message = "Hello World";
 console.log(message);
+```
+
+## 表
+
+| Area | Value |
+|---|---:|
+| Tokyo | 100 |
+| Osaka | 80 |
+
+## Mermaid
+
+```mermaid
+graph TD
+  A[Start] --> B{Check}
+  B -->|OK| C[Run]
+  B -->|NG| D[Fix]
+```
+</textarea>
+
+    <div
+      id="md-preview"
+      class="flex-1 min-h-0 overflow-auto p-4 bg-white border rounded markdown-body"
+    ></div>
+  </section>
+
+  <script>
+    const htmlTab = document.getElementById("tab-html");
+    const mdTab = document.getElementById("tab-md");
+
+    const htmlButton = document.getElementById("btn-html");
+    const mdButton = document.getElementById("btn-md");
+
+    const htmlCode = document.getElementById("html-code");
+    const outputFrame = document.getElementById("output-frame");
+    const runButton = document.getElementById("run-code");
+
+    const mdInput = document.getElementById("md-input");
+    const mdPreview = document.getElementById("md-preview");
+
+    const STORAGE_KEYS = {
+      html: "my-playground-html",
+      md: "my-playground-md"
+    };
+
+    const savedHtml = localStorage.getItem(STORAGE_KEYS.html);
+    const savedMd = localStorage.getItem(STORAGE_KEYS.md);
+
+    if (savedHtml !== null) {
+      htmlCode.value = savedHtml;
+    }
+
+    if (savedMd !== null) {
+      mdInput.value = savedMd;
+    }
+
+    function showTab(name) {
+      const isHtml = name === "html";
+
+      htmlTab.classList.toggle("hidden", !isHtml);
+      mdTab.classList.toggle("hidden", isHtml);
+
+      htmlButton.classList.toggle("bg-slate-600", isHtml);
+      mdButton.classList.toggle("bg-slate-600", !isHtml);
+
+      htmlButton.classList.toggle("hover:bg-slate-700", !isHtml);
+      mdButton.classList.toggle("hover:bg-slate-700", isHtml);
+    }
+
+    function buildIframeDocument(source) {
+      const trimmed = source.trim();
+
+      if (/^<!doctype html>/i.test(trimmed) || /<html[\s>]/i.test(trimmed)) {
+        return source;
+      }
+
+      return `<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"><\/script>
+  <style>
+    body {
+      padding: 1rem;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+  </style>
+</head>
+<body>
+${source}
+</body>
+</html>`;
+    }
+
+    function runCode() {
+      const source = htmlCode.value;
+      localStorage.setItem(STORAGE_KEYS.html, source);
+      outputFrame.srcdoc = buildIframeDocument(source);
+    }
+
+    async function renderMarkdown() {
+      const source = mdInput.value;
+      localStorage.setItem(STORAGE_KEYS.md, source);
+
+      if (!window.marked || !window.hljs) {
+        mdPreview.textContent = "Markdownライブラリの読み込み中です。";
+        return;
+      }
+
+      mdPreview.innerHTML = marked.parse(source, {
+        gfm: true,
+        breaks: true
+      });
+
+      const codeBlocks = mdPreview.querySelectorAll("pre code");
+
+      codeBlocks.forEach((code) => {
+        const className = code.className || "";
+        const isMermaid =
+          className.includes("language-mermaid") ||
+          className.includes("lang-mermaid");
+
+        if (isMermaid) {
+          const pre = code.parentElement;
+          const div = document.createElement("div");
+
+          div.className = "mermaid";
+          div.textContent = code.textContent;
+
+          pre.replaceWith(div);
+        }
+      });
+
+      mdPreview.querySelectorAll("pre code").forEach((block) => {
+        hljs.highlightElement(block);
+      });
+
+      if (window.mermaid) {
+        try {
+          await window.mermaid.run({
+            nodes: mdPreview.querySelectorAll(".mermaid")
+          });
+        } catch (error) {
+          console.error(error);
+
+          const message = document.createElement("div");
+          message.className =
+            "my-3 rounded border border-red-300 bg-red-50 p-3 text-sm text-red-700";
+          message.textContent =
+            "Mermaidの描画に失敗しました。構文を確認してください。";
+
+          mdPreview.prepend(message);
+        }
+      }
+    }
+
+    function debounce(fn, delay) {
+      let timerId;
+
+      return (...args) => {
+        clearTimeout(timerId);
+        timerId = setTimeout(() => fn(...args), delay);
+      };
+    }
+
+    htmlButton.addEventListener("click", () => showTab("html"));
+
+    mdButton.addEventListener("click", () => {
+      showTab("md");
+      renderMarkdown();
+    });
+
+    runButton.addEventListener("click", runCode);
+
+    htmlCode.addEventListener("input", () => {
+      localStorage.setItem(STORAGE_KEYS.html, htmlCode.value);
+    });
+
+    mdInput.addEventListener("input", debounce(renderMarkdown, 250));
+
+    window.addEventListener("mermaid-ready", renderMarkdown);
+
+    showTab("html");
+    runCode();
+    renderMarkdown();
+  </script>
+</body>
+</html>
