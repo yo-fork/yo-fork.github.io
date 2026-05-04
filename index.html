@@ -48,6 +48,12 @@
       -webkit-text-size-adjust: 100%;
     }
 
+    textarea,
+    input,
+    select {
+      font-size: 16px;
+    }
+
     textarea {
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
       tab-size: 2;
@@ -55,12 +61,12 @@
       user-select: text;
       resize: none;
       line-height: 1.5;
-      font-size: 16px;
     }
 
     button,
     label,
-    input {
+    input,
+    select {
       -webkit-tap-highlight-color: transparent;
       touch-action: manipulation;
     }
@@ -86,6 +92,20 @@
     .editor-tab-inactive {
       background: #e2e8f0;
       color: #0f172a;
+    }
+
+    .tool-button {
+      border-radius: 0.5rem;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      padding: 0.45rem 0.35rem;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .tool-button:active {
+      background: #e2e8f0;
     }
 
     .console-line {
@@ -239,6 +259,27 @@
       <button id="editor-tab-preview" type="button" class="editor-tab-inactive rounded px-2 py-2 text-sm font-bold">Preview</button>
     </div>
 
+    <div class="grid grid-cols-2 gap-1 shrink-0">
+      <select id="project-select" class="rounded border border-slate-300 bg-white px-2 py-2 text-sm"></select>
+      <input id="project-name" class="rounded border border-slate-300 bg-white px-2 py-2 text-sm" placeholder="Project name" />
+    </div>
+
+    <div class="grid grid-cols-4 gap-1 shrink-0">
+      <button id="new-project" type="button" class="tool-button">New</button>
+      <button id="save-project" type="button" class="tool-button">Save</button>
+      <button id="delete-project" type="button" class="tool-button">Delete</button>
+      <button id="reset-sample" type="button" class="tool-button">Sample</button>
+    </div>
+
+    <div class="grid grid-cols-4 gap-1 shrink-0">
+      <button id="copy-html" type="button" class="tool-button">Copy</button>
+      <button id="export-html" type="button" class="tool-button">Export</button>
+      <button id="font-smaller" type="button" class="tool-button">A-</button>
+      <button id="font-larger" type="button" class="tool-button">A+</button>
+    </div>
+
+    <div id="status-text" class="hidden shrink-0 rounded bg-emerald-50 border border-emerald-200 px-2 py-1 text-xs text-emerald-800"></div>
+
     <div id="editor-panel" class="flex-1 min-h-0 flex flex-col">
       <textarea
         id="html-code"
@@ -248,12 +289,7 @@
         autocomplete="off"
         autocorrect="off"
         placeholder="HTML body here..."
-      ><main class="card">
-  <h1>CodePen風 Playground</h1>
-  <p>HTML / CSS / JS を別々に書いて実行できます。</p>
-
-  <button id="count-button">Count: 0</button>
-</main></textarea>
+      ></textarea>
 
       <textarea
         id="css-code"
@@ -263,37 +299,7 @@
         autocomplete="off"
         autocorrect="off"
         placeholder="CSS here..."
-      >body {
-  min-height: 100vh;
-  display: grid;
-  place-items: center;
-  margin: 0;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: linear-gradient(135deg, #dbeafe, #f8fafc);
-}
-
-.card {
-  width: min(90vw, 420px);
-  padding: 24px;
-  border-radius: 20px;
-  background: white;
-  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.18);
-  text-align: center;
-}
-
-h1 {
-  margin-top: 0;
-  color: #1d4ed8;
-}
-
-button {
-  border: 0;
-  border-radius: 999px;
-  padding: 12px 18px;
-  color: white;
-  background: #2563eb;
-  font-weight: 700;
-}</textarea>
+      ></textarea>
 
       <textarea
         id="js-code"
@@ -303,15 +309,7 @@ button {
         autocomplete="off"
         autocorrect="off"
         placeholder="JavaScript here..."
-      >let count = 0;
-
-const button = document.getElementById("count-button");
-
-button.addEventListener("click", () => {
-  count += 1;
-  button.textContent = `Count: ${count}`;
-  console.log("count", count);
-});</textarea>
+      ></textarea>
     </div>
 
     <div id="preview-panel" class="hidden flex-1 min-h-0 flex flex-col gap-2">
@@ -331,7 +329,7 @@ button.addEventListener("click", () => {
       </div>
     </div>
 
-    <div class="grid grid-cols-3 gap-2 shrink-0">
+    <div class="grid grid-cols-3 gap-2 shrink-0 pb-[env(safe-area-inset-bottom)]">
       <button
         id="run-code"
         type="button"
@@ -394,11 +392,71 @@ graph TD
   </section>
 
   <script>
+    const DEFAULT_PROJECT = {
+      name: "Scratch",
+      html: `<main class="card">
+  <h1>CodePen風 Playground</h1>
+  <p>HTML / CSS / JS を別々に書いて実行できます。</p>
+  <button id="count-button">Count: 0</button>
+</main>`,
+      css: `body {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: linear-gradient(135deg, #dbeafe, #f8fafc);
+}
+
+.card {
+  width: min(90vw, 420px);
+  padding: 24px;
+  border-radius: 20px;
+  background: white;
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.18);
+  text-align: center;
+}
+
+h1 {
+  margin-top: 0;
+  color: #1d4ed8;
+}
+
+button {
+  border: 0;
+  border-radius: 999px;
+  padding: 12px 18px;
+  color: white;
+  background: #2563eb;
+  font-weight: 700;
+}`,
+      js: `let count = 0;
+const button = document.getElementById("count-button");
+
+button.addEventListener("click", () => {
+  count += 1;
+  button.textContent = \`Count: ${count}\`;
+  console.log("count", count);
+});`
+    };
+
     const penTab = document.getElementById("tab-pen");
     const mdTab = document.getElementById("tab-md");
 
     const penButton = document.getElementById("btn-pen");
     const mdButton = document.getElementById("btn-md");
+
+    const projectSelect = document.getElementById("project-select");
+    const projectNameInput = document.getElementById("project-name");
+    const newProjectButton = document.getElementById("new-project");
+    const saveProjectButton = document.getElementById("save-project");
+    const deleteProjectButton = document.getElementById("delete-project");
+    const resetSampleButton = document.getElementById("reset-sample");
+    const copyHtmlButton = document.getElementById("copy-html");
+    const exportHtmlButton = document.getElementById("export-html");
+    const fontSmallerButton = document.getElementById("font-smaller");
+    const fontLargerButton = document.getElementById("font-larger");
+    const statusText = document.getElementById("status-text");
 
     const editorPanel = document.getElementById("editor-panel");
     const previewPanel = document.getElementById("preview-panel");
@@ -413,6 +471,7 @@ graph TD
     const htmlCode = document.getElementById("html-code");
     const cssCode = document.getElementById("css-code");
     const jsCode = document.getElementById("js-code");
+    const allCodeTextareas = [htmlCode, cssCode, jsCode];
 
     const outputFrame = document.getElementById("output-frame");
     const runButton = document.getElementById("run-code");
@@ -425,29 +484,138 @@ graph TD
     const mdPreview = document.getElementById("md-preview");
 
     const STORAGE_KEYS = {
+      projects: "my-playground-projects-v2",
+      activeProjectId: "my-playground-active-project-id",
       html: "my-playground-html",
       css: "my-playground-css",
       js: "my-playground-js",
       md: "my-playground-md",
       activeEditor: "my-playground-active-editor",
       autoRun: "my-playground-auto-run",
-      includeTailwind: "my-playground-include-tailwind"
+      includeTailwind: "my-playground-include-tailwind",
+      editorFontSize: "my-playground-editor-font-size"
     };
 
-    const savedHtml = localStorage.getItem(STORAGE_KEYS.html);
-    const savedCss = localStorage.getItem(STORAGE_KEYS.css);
-    const savedJs = localStorage.getItem(STORAGE_KEYS.js);
+    let statusTimer = null;
+    let projects = loadProjects();
+    let activeProjectId = localStorage.getItem(STORAGE_KEYS.activeProjectId) || projects[0].id;
+    let editorFontSize = Number(localStorage.getItem(STORAGE_KEYS.editorFontSize) || "16");
+
     const savedMd = localStorage.getItem(STORAGE_KEYS.md);
     const savedActiveEditor = localStorage.getItem(STORAGE_KEYS.activeEditor);
     const savedAutoRun = localStorage.getItem(STORAGE_KEYS.autoRun);
     const savedIncludeTailwind = localStorage.getItem(STORAGE_KEYS.includeTailwind);
 
-    if (savedHtml !== null) htmlCode.value = savedHtml;
-    if (savedCss !== null) cssCode.value = savedCss;
-    if (savedJs !== null) jsCode.value = savedJs;
+    if (!projects.some((project) => project.id === activeProjectId)) {
+      activeProjectId = projects[0].id;
+    }
+
     if (savedMd !== null) mdInput.value = savedMd;
     if (savedAutoRun !== null) autoRun.checked = savedAutoRun === "true";
     if (savedIncludeTailwind !== null) includeTailwind.checked = savedIncludeTailwind === "true";
+
+    function makeId() {
+      return "p_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8);
+    }
+
+    function createProject(overrides = {}) {
+      return {
+        id: makeId(),
+        name: overrides.name || DEFAULT_PROJECT.name,
+        html: overrides.html ?? DEFAULT_PROJECT.html,
+        css: overrides.css ?? DEFAULT_PROJECT.css,
+        js: overrides.js ?? DEFAULT_PROJECT.js,
+        updatedAt: Date.now()
+      };
+    }
+
+    function loadProjects() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEYS.projects);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed;
+          }
+        }
+      } catch {
+        // ignore broken storage
+      }
+
+      const legacyHtml = localStorage.getItem(STORAGE_KEYS.html);
+      const legacyCss = localStorage.getItem(STORAGE_KEYS.css);
+      const legacyJs = localStorage.getItem(STORAGE_KEYS.js);
+
+      return [
+        createProject({
+          name: "Scratch",
+          html: legacyHtml ?? DEFAULT_PROJECT.html,
+          css: legacyCss ?? DEFAULT_PROJECT.css,
+          js: legacyJs ?? DEFAULT_PROJECT.js
+        })
+      ];
+    }
+
+    function saveProjects() {
+      localStorage.setItem(STORAGE_KEYS.projects, JSON.stringify(projects));
+      localStorage.setItem(STORAGE_KEYS.activeProjectId, activeProjectId);
+    }
+
+    function getActiveProject() {
+      return projects.find((project) => project.id === activeProjectId) || projects[0];
+    }
+
+    function captureEditorsToActiveProject() {
+      const project = getActiveProject();
+      project.name = projectNameInput.value.trim() || "Untitled";
+      project.html = htmlCode.value;
+      project.css = cssCode.value;
+      project.js = jsCode.value;
+      project.updatedAt = Date.now();
+      saveProjects();
+    }
+
+    function loadProjectIntoEditors(project) {
+      activeProjectId = project.id;
+      projectNameInput.value = project.name;
+      htmlCode.value = project.html;
+      cssCode.value = project.css;
+      jsCode.value = project.js;
+      saveProjects();
+      renderProjectSelect();
+      if (autoRun.checked) runCode({ switchToPreview: false });
+    }
+
+    function renderProjectSelect() {
+      projectSelect.innerHTML = "";
+      projects
+        .slice()
+        .sort((a, b) => b.updatedAt - a.updatedAt)
+        .forEach((project) => {
+          const option = document.createElement("option");
+          option.value = project.id;
+          option.textContent = project.name || "Untitled";
+          option.selected = project.id === activeProjectId;
+          projectSelect.appendChild(option);
+        });
+    }
+
+    function notify(message) {
+      clearTimeout(statusTimer);
+      statusText.textContent = message;
+      statusText.classList.remove("hidden");
+      statusTimer = setTimeout(() => {
+        statusText.classList.add("hidden");
+      }, 1800);
+    }
+
+    function applyEditorFontSize() {
+      editorFontSize = Math.max(12, Math.min(24, editorFontSize));
+      allCodeTextareas.forEach((textarea) => {
+        textarea.style.fontSize = editorFontSize + "px";
+      });
+      localStorage.setItem(STORAGE_KEYS.editorFontSize, String(editorFontSize));
+    }
 
     function showMainTab(name) {
       const isPen = name === "pen";
@@ -481,7 +649,7 @@ graph TD
       localStorage.setItem(STORAGE_KEYS.activeEditor, name);
 
       if (isPreview) {
-        runCode();
+        runCode({ switchToPreview: false });
       }
     }
 
@@ -511,51 +679,26 @@ graph TD
       return value.replace(/<\/script/gi, "<\\/script");
     }
 
-    function buildPenDocument() {
+    function buildStandaloneDocument({ withConsoleBridge = false } = {}) {
       const html = htmlCode.value;
       const css = cssCode.value;
       const js = safeForScript(jsCode.value);
       const tailwindScript = includeTailwind.checked
         ? '<script src="https://cdn.tailwindcss.com"><\\/script>'
         : "";
-
-      return `<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  ${tailwindScript}
-  <style>
-    ${css}
-  </style>
-</head>
-<body>
-  ${html}
-
+      const consoleBridge = withConsoleBridge
+        ? `
   <script>
     (() => {
       const toSerializable = (arg) => {
-        if (arg instanceof Error) {
-          return arg.stack || arg.message;
-        }
-
-        if (arg instanceof HTMLElement) {
-          return arg.outerHTML;
-        }
-
-        if (typeof arg === "function") {
-          return String(arg);
-        }
-
+        if (arg instanceof Error) return arg.stack || arg.message;
+        if (arg instanceof HTMLElement) return arg.outerHTML;
+        if (typeof arg === "function") return String(arg);
         try {
           structuredClone(arg);
           return arg;
         } catch {
-          try {
-            return JSON.stringify(arg);
-          } catch {
-            return String(arg);
-          }
+          try { return JSON.stringify(arg); } catch { return String(arg); }
         }
       };
 
@@ -583,11 +726,25 @@ graph TD
         send("error", ["Unhandled promise rejection", toSerializable(event.reason)]);
       });
     })();
-  <\/script>
+  <\\/script>`
+        : "";
 
+      return `<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  ${tailwindScript}
+  <style>
+${css}
+  </style>
+</head>
+<body>
+${html}
+${consoleBridge}
   <script>
     try {
-      ${js}
+${js}
     } catch (error) {
       console.error(error);
     }
@@ -596,15 +753,17 @@ graph TD
 </html>`;
     }
 
-    function runCode() {
-      localStorage.setItem(STORAGE_KEYS.html, htmlCode.value);
-      localStorage.setItem(STORAGE_KEYS.css, cssCode.value);
-      localStorage.setItem(STORAGE_KEYS.js, jsCode.value);
+    function runCode({ switchToPreview = false } = {}) {
+      captureEditorsToActiveProject();
       localStorage.setItem(STORAGE_KEYS.autoRun, String(autoRun.checked));
       localStorage.setItem(STORAGE_KEYS.includeTailwind, String(includeTailwind.checked));
 
       clearConsole();
-      outputFrame.srcdoc = buildPenDocument();
+      outputFrame.srcdoc = buildStandaloneDocument({ withConsoleBridge: true });
+
+      if (switchToPreview) {
+        showEditorTab("preview");
+      }
     }
 
     function debounce(fn, delay) {
@@ -617,10 +776,45 @@ graph TD
     }
 
     const autoRunDebounced = debounce(() => {
+      captureEditorsToActiveProject();
+      renderProjectSelect();
       if (autoRun.checked) {
-        runCode();
+        runCode({ switchToPreview: false });
       }
     }, 500);
+
+    async function copyStandaloneHtml() {
+      captureEditorsToActiveProject();
+      const content = buildStandaloneDocument({ withConsoleBridge: false });
+
+      try {
+        await navigator.clipboard.writeText(content);
+        notify("Standalone HTMLをコピーしました");
+      } catch {
+        notify("コピーできませんでした。Safariの権限を確認してください");
+      }
+    }
+
+    function exportStandaloneHtml() {
+      captureEditorsToActiveProject();
+      const content = buildStandaloneDocument({ withConsoleBridge: false });
+      const project = getActiveProject();
+      const safeName = (project.name || "playground")
+        .trim()
+        .replace(/[\\/:*?\"<>|]/g, "-")
+        .replace(/\s+/g, "-")
+        .slice(0, 60) || "playground";
+      const blob = new Blob([content], { type: "text/html;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${safeName}.html`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      notify("HTMLを書き出しました");
+    }
 
     async function renderMarkdown() {
       const source = mdInput.value;
@@ -690,25 +884,99 @@ graph TD
     editorTabButtons.js.addEventListener("click", () => showEditorTab("js"));
     editorTabButtons.preview.addEventListener("click", () => showEditorTab("preview"));
 
+    projectSelect.addEventListener("change", () => {
+      captureEditorsToActiveProject();
+      const nextProject = projects.find((project) => project.id === projectSelect.value);
+      if (nextProject) {
+        loadProjectIntoEditors(nextProject);
+        notify("プロジェクトを切り替えました");
+      }
+    });
+
+    projectNameInput.addEventListener("input", debounce(() => {
+      captureEditorsToActiveProject();
+      renderProjectSelect();
+    }, 300));
+
+    newProjectButton.addEventListener("click", () => {
+      captureEditorsToActiveProject();
+      const name = prompt("新しいプロジェクト名", "Untitled");
+      if (name === null) return;
+      const project = createProject({ name: name.trim() || "Untitled", html: "", css: "", js: "" });
+      projects.push(project);
+      loadProjectIntoEditors(project);
+      showEditorTab("html");
+      notify("新規プロジェクトを作成しました");
+    });
+
+    saveProjectButton.addEventListener("click", () => {
+      captureEditorsToActiveProject();
+      renderProjectSelect();
+      notify("保存しました");
+    });
+
+    deleteProjectButton.addEventListener("click", () => {
+      if (projects.length <= 1) {
+        notify("最後のプロジェクトは削除できません");
+        return;
+      }
+
+      const project = getActiveProject();
+      if (!confirm(`「${project.name}」を削除しますか？`)) return;
+
+      projects = projects.filter((item) => item.id !== project.id);
+      activeProjectId = projects[0].id;
+      saveProjects();
+      loadProjectIntoEditors(projects[0]);
+      notify("削除しました");
+    });
+
+    resetSampleButton.addEventListener("click", () => {
+      if (!confirm("現在のコードをサンプルに戻しますか？")) return;
+      const project = getActiveProject();
+      project.html = DEFAULT_PROJECT.html;
+      project.css = DEFAULT_PROJECT.css;
+      project.js = DEFAULT_PROJECT.js;
+      project.updatedAt = Date.now();
+      saveProjects();
+      loadProjectIntoEditors(project);
+      showEditorTab("html");
+      notify("サンプルを読み込みました");
+    });
+
+    copyHtmlButton.addEventListener("click", copyStandaloneHtml);
+    exportHtmlButton.addEventListener("click", exportStandaloneHtml);
+
+    fontSmallerButton.addEventListener("click", () => {
+      editorFontSize -= 1;
+      applyEditorFontSize();
+      notify(`フォント ${editorFontSize}px`);
+    });
+
+    fontLargerButton.addEventListener("click", () => {
+      editorFontSize += 1;
+      applyEditorFontSize();
+      notify(`フォント ${editorFontSize}px`);
+    });
+
     runButton.addEventListener("click", () => {
-      runCode();
-      showEditorTab("preview");
+      runCode({ switchToPreview: true });
     });
 
     clearConsoleButton.addEventListener("click", clearConsole);
 
-    [htmlCode, cssCode, jsCode].forEach((textarea) => {
+    allCodeTextareas.forEach((textarea) => {
       textarea.addEventListener("input", autoRunDebounced);
     });
 
     autoRun.addEventListener("change", () => {
       localStorage.setItem(STORAGE_KEYS.autoRun, String(autoRun.checked));
-      if (autoRun.checked) runCode();
+      if (autoRun.checked) runCode({ switchToPreview: false });
     });
 
     includeTailwind.addEventListener("change", () => {
       localStorage.setItem(STORAGE_KEYS.includeTailwind, String(includeTailwind.checked));
-      runCode();
+      runCode({ switchToPreview: false });
     });
 
     mdInput.addEventListener("input", debounce(renderMarkdown, 250));
@@ -720,9 +988,12 @@ graph TD
 
     window.addEventListener("mermaid-ready", renderMarkdown);
 
+    renderProjectSelect();
+    loadProjectIntoEditors(getActiveProject());
+    applyEditorFontSize();
     showMainTab("pen");
     showEditorTab(savedActiveEditor || "html");
-    runCode();
+    runCode({ switchToPreview: false });
     renderMarkdown();
   </script>
 </body>
