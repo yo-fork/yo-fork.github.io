@@ -10,10 +10,17 @@
   <meta name="theme-color" content="#0f172a" />
   <link rel="manifest" href="./manifest.webmanifest" />
   <link rel="stylesheet" href="./style.css" />
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" />
+  <script src="./security_patch.js"></script>
+  <script type="importmap">
+    {
+      "imports": {
+        "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs": "https://cdn.jsdelivr.net/npm/mermaid@10.9.3/dist/mermaid.esm.min.mjs"
+      }
+    }
+  </script>
   <script type="module" src="./app.js"></script>
   <script defer src="./patch.js"></script>
 </head>
@@ -67,7 +74,7 @@
         <div id="code-zoom-label" class="rounded border bg-white px-2 py-2 text-center text-xs font-bold text-slate-700">100%</div>
       </div>
       <div id="output-shell" class="preview-shell">
-        <iframe id="output-frame" title="Code output" class="code-frame" sandbox="allow-scripts allow-forms allow-modals allow-popups"></iframe>
+        <iframe id="output-frame" title="Code output" class="code-frame" sandbox="allow-scripts allow-forms allow-modals"></iframe>
       </div>
       <div class="h-28 shrink-0 rounded bg-slate-950 text-xs text-slate-100 flex flex-col">
         <div class="flex items-center justify-between border-b border-slate-700 px-2 py-1 text-slate-300">
@@ -126,9 +133,7 @@
       </div>
     </details>
 
-    <div id="md-preview-zoom-bar" class="hidden md-toolbar shrink-0">
-    </div>
-
+    <div id="md-preview-zoom-bar" class="hidden md-toolbar shrink-0"></div>
     <div id="md-stats" class="shrink-0 rounded bg-white border border-slate-200 px-2 py-1 text-xs text-slate-600"></div>
     <div id="md-status" class="hidden status shrink-0"></div>
 
