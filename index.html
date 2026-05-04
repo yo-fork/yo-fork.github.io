@@ -58,7 +58,9 @@
       font-size: 16px;
     }
 
-    button {
+    button,
+    label,
+    input {
       -webkit-tap-highlight-color: transparent;
       touch-action: manipulation;
     }
@@ -74,6 +76,35 @@
 
     .hidden {
       display: none !important;
+    }
+
+    .editor-tab-active {
+      background: #2563eb;
+      color: #ffffff;
+    }
+
+    .editor-tab-inactive {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+
+    .console-line {
+      border-bottom: 1px solid #1e293b;
+      padding: 0.25rem 0;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .console-log {
+      color: #e5e7eb;
+    }
+
+    .console-warn {
+      color: #fde68a;
+    }
+
+    .console-error {
+      color: #fecaca;
     }
 
     .markdown-body {
@@ -184,11 +215,11 @@
 <body class="bg-slate-100 app-height flex flex-col">
   <div class="flex bg-slate-800 text-white shrink-0 pt-[env(safe-area-inset-top)]">
     <button
-      id="btn-html"
+      id="btn-pen"
       type="button"
       class="px-4 py-3 flex-1 font-bold bg-slate-600"
     >
-      HTML Run
+      Code Run
     </button>
 
     <button
@@ -200,41 +231,125 @@
     </button>
   </div>
 
-  <section id="tab-html" class="flex-1 min-h-0 flex flex-col p-2 gap-2">
-    <textarea
-      id="html-code"
-      class="flex-1 min-h-0 p-3 border rounded shadow-inner bg-white text-sm"
-      spellcheck="false"
-      autocapitalize="off"
-      autocomplete="off"
-      autocorrect="off"
-      placeholder="Enter HTML / CSS / JS here..."
-    ><h1 class="text-2xl font-bold text-blue-500">Hello!</h1>
+  <section id="tab-pen" class="flex-1 min-h-0 flex flex-col p-2 gap-2">
+    <div class="grid grid-cols-4 gap-1 shrink-0">
+      <button id="editor-tab-html" type="button" class="editor-tab-active rounded px-2 py-2 text-sm font-bold">HTML</button>
+      <button id="editor-tab-css" type="button" class="editor-tab-inactive rounded px-2 py-2 text-sm font-bold">CSS</button>
+      <button id="editor-tab-js" type="button" class="editor-tab-inactive rounded px-2 py-2 text-sm font-bold">JS</button>
+      <button id="editor-tab-preview" type="button" class="editor-tab-inactive rounded px-2 py-2 text-sm font-bold">Preview</button>
+    </div>
 
-<p>iframe内でもTailwindが使えます。</p>
+    <div id="editor-panel" class="flex-1 min-h-0 flex flex-col">
+      <textarea
+        id="html-code"
+        class="flex-1 min-h-0 p-3 border rounded shadow-inner bg-white text-sm"
+        spellcheck="false"
+        autocapitalize="off"
+        autocomplete="off"
+        autocorrect="off"
+        placeholder="HTML body here..."
+      ><main class="card">
+  <h1>CodePen風 Playground</h1>
+  <p>HTML / CSS / JS を別々に書いて実行できます。</p>
 
-<button class="bg-blue-600 text-white px-4 py-2 rounded" onclick="alert('Clicked!')">
-  Click me
-</button>
+  <button id="count-button">Count: 0</button>
+</main></textarea>
 
-<script>
-  console.log("Running!");
-</script></textarea>
+      <textarea
+        id="css-code"
+        class="hidden flex-1 min-h-0 p-3 border rounded shadow-inner bg-white text-sm"
+        spellcheck="false"
+        autocapitalize="off"
+        autocomplete="off"
+        autocorrect="off"
+        placeholder="CSS here..."
+      >body {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: linear-gradient(135deg, #dbeafe, #f8fafc);
+}
 
-    <button
-      id="run-code"
-      type="button"
-      class="bg-blue-600 text-white py-2 rounded shadow font-bold active:bg-blue-700 shrink-0"
-    >
-      Run Code
-    </button>
+.card {
+  width: min(90vw, 420px);
+  padding: 24px;
+  border-radius: 20px;
+  background: white;
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.18);
+  text-align: center;
+}
 
-    <iframe
-      id="output-frame"
-      title="HTML output"
-      class="flex-1 min-h-0 bg-white border rounded"
-      sandbox="allow-scripts allow-forms allow-modals allow-popups"
-    ></iframe>
+h1 {
+  margin-top: 0;
+  color: #1d4ed8;
+}
+
+button {
+  border: 0;
+  border-radius: 999px;
+  padding: 12px 18px;
+  color: white;
+  background: #2563eb;
+  font-weight: 700;
+}</textarea>
+
+      <textarea
+        id="js-code"
+        class="hidden flex-1 min-h-0 p-3 border rounded shadow-inner bg-white text-sm"
+        spellcheck="false"
+        autocapitalize="off"
+        autocomplete="off"
+        autocorrect="off"
+        placeholder="JavaScript here..."
+      >let count = 0;
+
+const button = document.getElementById("count-button");
+
+button.addEventListener("click", () => {
+  count += 1;
+  button.textContent = `Count: ${count}`;
+  console.log("count", count);
+});</textarea>
+    </div>
+
+    <div id="preview-panel" class="hidden flex-1 min-h-0 flex flex-col gap-2">
+      <iframe
+        id="output-frame"
+        title="Code output"
+        class="flex-1 min-h-0 bg-white border rounded"
+        sandbox="allow-scripts allow-forms allow-modals allow-popups"
+      ></iframe>
+
+      <div class="h-28 shrink-0 rounded bg-slate-950 text-xs text-slate-100 flex flex-col">
+        <div class="flex items-center justify-between border-b border-slate-700 px-2 py-1 text-slate-300">
+          <span>Console</span>
+          <button id="clear-console" type="button" class="rounded bg-slate-700 px-2 py-1 text-xs text-white">Clear</button>
+        </div>
+        <div id="console-output" class="flex-1 overflow-auto px-2 py-1"></div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-3 gap-2 shrink-0">
+      <button
+        id="run-code"
+        type="button"
+        class="bg-blue-600 text-white py-2 rounded shadow font-bold active:bg-blue-700"
+      >
+        Run
+      </button>
+
+      <label class="flex items-center justify-center gap-2 rounded bg-white border text-sm font-bold">
+        <input id="auto-run" type="checkbox" checked />
+        Auto
+      </label>
+
+      <label class="flex items-center justify-center gap-2 rounded bg-white border text-sm font-bold">
+        <input id="include-tailwind" type="checkbox" />
+        Tailwind
+      </label>
+    </div>
   </section>
 
   <section id="tab-md" class="hidden flex-1 min-h-0 flex flex-col p-2 gap-2">
@@ -279,79 +394,233 @@ graph TD
   </section>
 
   <script>
-    const htmlTab = document.getElementById("tab-html");
+    const penTab = document.getElementById("tab-pen");
     const mdTab = document.getElementById("tab-md");
 
-    const htmlButton = document.getElementById("btn-html");
+    const penButton = document.getElementById("btn-pen");
     const mdButton = document.getElementById("btn-md");
 
+    const editorPanel = document.getElementById("editor-panel");
+    const previewPanel = document.getElementById("preview-panel");
+
+    const editorTabButtons = {
+      html: document.getElementById("editor-tab-html"),
+      css: document.getElementById("editor-tab-css"),
+      js: document.getElementById("editor-tab-js"),
+      preview: document.getElementById("editor-tab-preview")
+    };
+
     const htmlCode = document.getElementById("html-code");
+    const cssCode = document.getElementById("css-code");
+    const jsCode = document.getElementById("js-code");
+
     const outputFrame = document.getElementById("output-frame");
     const runButton = document.getElementById("run-code");
+    const autoRun = document.getElementById("auto-run");
+    const includeTailwind = document.getElementById("include-tailwind");
+    const consoleOutput = document.getElementById("console-output");
+    const clearConsoleButton = document.getElementById("clear-console");
 
     const mdInput = document.getElementById("md-input");
     const mdPreview = document.getElementById("md-preview");
 
     const STORAGE_KEYS = {
       html: "my-playground-html",
-      md: "my-playground-md"
+      css: "my-playground-css",
+      js: "my-playground-js",
+      md: "my-playground-md",
+      activeEditor: "my-playground-active-editor",
+      autoRun: "my-playground-auto-run",
+      includeTailwind: "my-playground-include-tailwind"
     };
 
     const savedHtml = localStorage.getItem(STORAGE_KEYS.html);
+    const savedCss = localStorage.getItem(STORAGE_KEYS.css);
+    const savedJs = localStorage.getItem(STORAGE_KEYS.js);
     const savedMd = localStorage.getItem(STORAGE_KEYS.md);
+    const savedActiveEditor = localStorage.getItem(STORAGE_KEYS.activeEditor);
+    const savedAutoRun = localStorage.getItem(STORAGE_KEYS.autoRun);
+    const savedIncludeTailwind = localStorage.getItem(STORAGE_KEYS.includeTailwind);
 
-    if (savedHtml !== null) {
-      htmlCode.value = savedHtml;
+    if (savedHtml !== null) htmlCode.value = savedHtml;
+    if (savedCss !== null) cssCode.value = savedCss;
+    if (savedJs !== null) jsCode.value = savedJs;
+    if (savedMd !== null) mdInput.value = savedMd;
+    if (savedAutoRun !== null) autoRun.checked = savedAutoRun === "true";
+    if (savedIncludeTailwind !== null) includeTailwind.checked = savedIncludeTailwind === "true";
+
+    function showMainTab(name) {
+      const isPen = name === "pen";
+
+      penTab.classList.toggle("hidden", !isPen);
+      mdTab.classList.toggle("hidden", isPen);
+
+      penButton.classList.toggle("bg-slate-600", isPen);
+      mdButton.classList.toggle("bg-slate-600", !isPen);
+
+      penButton.classList.toggle("hover:bg-slate-700", !isPen);
+      mdButton.classList.toggle("hover:bg-slate-700", isPen);
     }
 
-    if (savedMd !== null) {
-      mdInput.value = savedMd;
-    }
+    function showEditorTab(name) {
+      const isPreview = name === "preview";
 
-    function showTab(name) {
-      const isHtml = name === "html";
+      htmlCode.classList.toggle("hidden", name !== "html");
+      cssCode.classList.toggle("hidden", name !== "css");
+      jsCode.classList.toggle("hidden", name !== "js");
 
-      htmlTab.classList.toggle("hidden", !isHtml);
-      mdTab.classList.toggle("hidden", isHtml);
+      editorPanel.classList.toggle("hidden", isPreview);
+      previewPanel.classList.toggle("hidden", !isPreview);
 
-      htmlButton.classList.toggle("bg-slate-600", isHtml);
-      mdButton.classList.toggle("bg-slate-600", !isHtml);
+      Object.entries(editorTabButtons).forEach(([key, button]) => {
+        const active = key === name;
+        button.classList.toggle("editor-tab-active", active);
+        button.classList.toggle("editor-tab-inactive", !active);
+      });
 
-      htmlButton.classList.toggle("hover:bg-slate-700", !isHtml);
-      mdButton.classList.toggle("hover:bg-slate-700", isHtml);
-    }
+      localStorage.setItem(STORAGE_KEYS.activeEditor, name);
 
-    function buildIframeDocument(source) {
-      const trimmed = source.trim();
-
-      if (/^<!doctype html>/i.test(trimmed) || /<html[\s>]/i.test(trimmed)) {
-        return source;
+      if (isPreview) {
+        runCode();
       }
+    }
+
+    function formatConsoleArg(value) {
+      if (typeof value === "string") return value;
+
+      try {
+        return JSON.stringify(value, null, 2);
+      } catch {
+        return String(value);
+      }
+    }
+
+    function addConsoleLine(level, args) {
+      const line = document.createElement("div");
+      line.className = `console-line console-${level}`;
+      line.textContent = args.map(formatConsoleArg).join(" ");
+      consoleOutput.appendChild(line);
+      consoleOutput.scrollTop = consoleOutput.scrollHeight;
+    }
+
+    function clearConsole() {
+      consoleOutput.innerHTML = "";
+    }
+
+    function safeForScript(value) {
+      return value.replace(/<\/script/gi, "<\\/script");
+    }
+
+    function buildPenDocument() {
+      const html = htmlCode.value;
+      const css = cssCode.value;
+      const js = safeForScript(jsCode.value);
+      const tailwindScript = includeTailwind.checked
+        ? '<script src="https://cdn.tailwindcss.com"><\\/script>'
+        : "";
 
       return `<!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="https://cdn.tailwindcss.com"><\/script>
+  ${tailwindScript}
   <style>
-    body {
-      padding: 1rem;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
+    ${css}
   </style>
 </head>
 <body>
-${source}
+  ${html}
+
+  <script>
+    (() => {
+      const toSerializable = (arg) => {
+        if (arg instanceof Error) {
+          return arg.stack || arg.message;
+        }
+
+        if (arg instanceof HTMLElement) {
+          return arg.outerHTML;
+        }
+
+        if (typeof arg === "function") {
+          return String(arg);
+        }
+
+        try {
+          structuredClone(arg);
+          return arg;
+        } catch {
+          try {
+            return JSON.stringify(arg);
+          } catch {
+            return String(arg);
+          }
+        }
+      };
+
+      const send = (level, args) => {
+        window.parent.postMessage({
+          type: "playground-console",
+          level,
+          args: args.map(toSerializable)
+        }, "*");
+      };
+
+      ["log", "warn", "error"].forEach((level) => {
+        const original = console[level];
+        console[level] = (...args) => {
+          send(level, args);
+          original.apply(console, args);
+        };
+      });
+
+      window.addEventListener("error", (event) => {
+        send("error", [event.message + " at " + event.filename + ":" + event.lineno]);
+      });
+
+      window.addEventListener("unhandledrejection", (event) => {
+        send("error", ["Unhandled promise rejection", toSerializable(event.reason)]);
+      });
+    })();
+  <\/script>
+
+  <script>
+    try {
+      ${js}
+    } catch (error) {
+      console.error(error);
+    }
+  <\/script>
 </body>
 </html>`;
     }
 
     function runCode() {
-      const source = htmlCode.value;
-      localStorage.setItem(STORAGE_KEYS.html, source);
-      outputFrame.srcdoc = buildIframeDocument(source);
+      localStorage.setItem(STORAGE_KEYS.html, htmlCode.value);
+      localStorage.setItem(STORAGE_KEYS.css, cssCode.value);
+      localStorage.setItem(STORAGE_KEYS.js, jsCode.value);
+      localStorage.setItem(STORAGE_KEYS.autoRun, String(autoRun.checked));
+      localStorage.setItem(STORAGE_KEYS.includeTailwind, String(includeTailwind.checked));
+
+      clearConsole();
+      outputFrame.srcdoc = buildPenDocument();
     }
+
+    function debounce(fn, delay) {
+      let timerId;
+
+      return (...args) => {
+        clearTimeout(timerId);
+        timerId = setTimeout(() => fn(...args), delay);
+      };
+    }
+
+    const autoRunDebounced = debounce(() => {
+      if (autoRun.checked) {
+        runCode();
+      }
+    }, 500);
 
     async function renderMarkdown() {
       const source = mdInput.value;
@@ -409,33 +678,50 @@ ${source}
       }
     }
 
-    function debounce(fn, delay) {
-      let timerId;
-
-      return (...args) => {
-        clearTimeout(timerId);
-        timerId = setTimeout(() => fn(...args), delay);
-      };
-    }
-
-    htmlButton.addEventListener("click", () => showTab("html"));
+    penButton.addEventListener("click", () => showMainTab("pen"));
 
     mdButton.addEventListener("click", () => {
-      showTab("md");
+      showMainTab("md");
       renderMarkdown();
     });
 
-    runButton.addEventListener("click", runCode);
+    editorTabButtons.html.addEventListener("click", () => showEditorTab("html"));
+    editorTabButtons.css.addEventListener("click", () => showEditorTab("css"));
+    editorTabButtons.js.addEventListener("click", () => showEditorTab("js"));
+    editorTabButtons.preview.addEventListener("click", () => showEditorTab("preview"));
 
-    htmlCode.addEventListener("input", () => {
-      localStorage.setItem(STORAGE_KEYS.html, htmlCode.value);
+    runButton.addEventListener("click", () => {
+      runCode();
+      showEditorTab("preview");
+    });
+
+    clearConsoleButton.addEventListener("click", clearConsole);
+
+    [htmlCode, cssCode, jsCode].forEach((textarea) => {
+      textarea.addEventListener("input", autoRunDebounced);
+    });
+
+    autoRun.addEventListener("change", () => {
+      localStorage.setItem(STORAGE_KEYS.autoRun, String(autoRun.checked));
+      if (autoRun.checked) runCode();
+    });
+
+    includeTailwind.addEventListener("change", () => {
+      localStorage.setItem(STORAGE_KEYS.includeTailwind, String(includeTailwind.checked));
+      runCode();
     });
 
     mdInput.addEventListener("input", debounce(renderMarkdown, 250));
 
+    window.addEventListener("message", (event) => {
+      if (!event.data || event.data.type !== "playground-console") return;
+      addConsoleLine(event.data.level || "log", event.data.args || []);
+    });
+
     window.addEventListener("mermaid-ready", renderMarkdown);
 
-    showTab("html");
+    showMainTab("pen");
+    showEditorTab(savedActiveEditor || "html");
     runCode();
     renderMarkdown();
   </script>
