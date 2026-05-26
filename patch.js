@@ -1,5 +1,7 @@
 (() => {
   const KATEX_VERSION = '0.16.11';
+  const mathBlocks = new Map();
+  let mathBlockSeq = 0;
   let katexLoadPromise = null;
   let mathRendering = false;
 
@@ -97,10 +99,41 @@
     return katexLoadPromise;
   }
 
+  function makeMathToken(tex) {
+    const token = `PGMATHBLOCK${mathBlockSeq++}PG`;
+    mathBlocks.set(token, tex.trim());
+    return token;
+  }
+
+  function preprocessBlockMath(markdown) {
+    let text = String(markdown || '');
+
+    // $$ ... $$ block. This handles both multi-line and one-line display math.
+    text = text.replace(/(^|\n)[ \t]*\$\$[ \t]*(?:\n)?([\s\S]*?)(?:\n)?[ \t]*\$\$[ \t]*(?=\n|$)/g, (match, lead, tex) => {
+      if (!tex.trim()) return match;
+      return lead + makeMathToken(tex) + '\n';
+    });
+
+    // \[ ... \] block. This also handles one-line display math.
+    text = text.replace(/(^|\n)[ \t]*\\\[[ \t]*(?:\n)?([\s\S]*?)(?:\n)?[ \t]*\\\][ \t]*(?=\n|$)/g, (match, lead, tex) => {
+      if (!tex.trim()) return match;
+      return lead + makeMathToken(tex) + '\n';
+    });
+
+    return text;
+  }
+
+  function patchMarkedForBlockMath() {
+    if (!window.marked || window.marked.__playgroundBlockMathPatched) return;
+    const originalParse = window.marked.parse.bind(window.marked);
+    window.marked.parse = (source, ...args) => originalParse(preprocessBlockMath(source), ...args);
+    window.marked.__playgroundBlockMathPatched = true;
+  }
+
   function shouldSkipMathNode(node) {
     const parent = node.parentElement;
     if (!parent) return true;
-    return Boolean(parent.closest('code, pre, kbd, samp, script, style, textarea, .katex, .katex-display, .mermaid-host, .mermaid-error'));
+    return Boolean(parent.closest('code, pre, kbd, samp, script, style, textarea, .katex, .katex-display, .math-inline, .math-display, .mermaid-host, .mermaid-error'));
   }
 
   function findMathToken(text, startIndex) {
@@ -110,8 +143,6 @@
       if (index >= 0) candidates.push({ index, open, close, displayMode });
     };
 
-    push(text.indexOf('$$', startIndex), '$$', '$$', true);
-    push(text.indexOf('\\[', startIndex), '\\[', '\\]', true);
     push(text.indexOf('\\(', startIndex), '\\(', '\\)', false);
 
     let dollarIndex = text.indexOf('$', startIndex);
@@ -143,9 +174,7 @@
         break;
       }
 
-      if (token.index > cursor) {
-        parts.push({ type: 'text', value: text.slice(cursor, token.index) });
-      }
+      if (token.index > cursor) parts.push({ type: 'text', value: text.slice(cursor, token.index) });
 
       const contentStart = token.index + token.open.length;
       const closeIndex = text.indexOf(token.close, contentStart);
@@ -192,14 +221,46 @@
     return wrapper;
   }
 
+  function processMathPlaceholders(root) {
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode(node) {
+        return /PGMATHBLOCK\d+PG/.test(node.nodeValue || '') ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+      }
+    });
+
+    const nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+
+    nodes.forEach((node) => {
+      const text = node.nodeValue || '';
+      const parts = text.split(/(PGMATHBLOCK\d+PG)/g).filter(Boolean);
+      const fragment = document.createDocumentFragment();
+
+      parts.forEach((part) => {
+        if (mathBlocks.has(part)) fragment.append(renderMathElement(mathBlocks.get(part), true));
+        else fragment.append(document.createTextNode(part));
+      });
+
+      const parent = node.parentElement;
+      const onlyPlaceholder = parent && parent.textContent.trim() === text.trim() && /^PGMATHBLOCK\d+PG$/.test(text.trim());
+      if (onlyPlaceholder && parent.tagName.toLowerCase() === 'p' && fragment.childNodes.length === 1) {
+        parent.replaceWith(fragment);
+      } else {
+        node.replaceWith(fragment);
+      }
+    });
+  }
+
   async function renderMathInMarkdown() {
     const mdPreview = $('md-preview');
     if (!mdPreview || mathRendering) return;
-    if (!/[\\$]/.test(mdPreview.textContent || '')) return;
+    if (!/[\\$]|PGMATHBLOCK\d+PG/.test(mdPreview.textContent || '')) return;
 
     mathRendering = true;
     try {
       await loadKatex();
+      processMathPlaceholders(mdPreview);
+
       const walker = document.createTreeWalker(mdPreview, NodeFilter.SHOW_TEXT, {
         acceptNode(node) {
           if (shouldSkipMathNode(node)) return NodeFilter.FILTER_REJECT;
@@ -282,14 +343,22 @@
     tools.appendChild(hint);
   }
 
+  function requestRerender() {
+    const mdInput = $('md-input');
+    if (!mdInput) return;
+    mdInput.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+
   function boot() {
     installStyle();
+    patchMarkedForBlockMath();
     setupPreviewZoomBar();
     installObservers();
     addMathHints();
     makeChecklistInteractive();
     updatePreviewZoomBarVisibility();
     renderMathInMarkdown();
+    setTimeout(requestRerender, 80);
   }
 
   if (document.readyState === 'loading') {
